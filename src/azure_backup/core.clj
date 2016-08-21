@@ -4,8 +4,6 @@
            (java.io FileInputStream))
   (:gen-class))
 
-(def base-folder (clojure.java.io/file "C:\\Users\\Diomedes\\azure-backup\\test-data"))
-
 (defn local-folder->relative-paths
   [base-folder]
   (let [file-base (.toURI base-folder)]
@@ -35,7 +33,7 @@
     container))
 
 (defn upload-files
-  [container local-paths server-paths]
+  [container local-paths server-paths base-folder]
   (loop [[local-path & rest-paths] local-paths
          new-server-paths server-paths]
     (if local-path
@@ -50,11 +48,14 @@
 
 (defn -main
   [& args]
-  (let [service-client (connect-to-azure-storage "connection-string")
+  (let [settings (clojure.edn/read-string (slurp "settings.clj"))
+        base-folder (clojure.java.io/file (:base-folder settings))
+        ;; validation would be nice
+        service-client (connect-to-azure-storage (:connection-string settings))
         container (get-or-create-container service-client "testcontainer")
         server-paths (sf/get-paths-from-local-or-server container "local-file-cache")
         local-paths (local-folder->relative-paths base-folder)
-        new-server-paths (upload-files container local-paths server-paths)]
+        new-server-paths (upload-files container local-paths server-paths base-folder)]
     (println "Persisting cache of files to local-file-cache.")
     (spit "local-file-cache" new-server-paths)
     (println "Done")))
