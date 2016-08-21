@@ -13,9 +13,9 @@
 
 (defn connect-to-azure-storage
   "Reads the connection string from file-name and attempts to construct a CloudStorageAccount object"
-  [file-name]
+  [connection-string]
   (try
-    (-> (slurp file-name)
+    (-> connection-string
         (clojure.string/trim-newline)
         (clojure.string/trim)
         (CloudStorageAccount/parse)
